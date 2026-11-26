@@ -1,96 +1,117 @@
 # Brave + Lumo Setup
 
-Lumo's browser automation only works with Chrome right now. If you use Brave, this guide fixes that today using a community MCP server. It takes about fifteen minutes.
+Lumo browser automation works with Chrome only. This guide shows how to make Lumo Desktop control Brave instead. Setup takes about 15 minutes.
 
-The result: Lumo Desktop can open tabs, read pages, click, and fill forms in your actual running Brave session. Your logins stay in the browser. No profile copying, no extensions, no exported passwords.
+After setup, Lumo can:
 
-This is a setup guide, not a tool I wrote. The tool is [brave-session-mcp](https://github.com/MacStenk/brave-mcp) by MacStenk (MIT license, unofficial, not affiliated with Brave Software). Everything here is the exact setup I verified end to end on macOS in November 2026.
+- open tabs in your Brave browser
+- read pages
+- click
+- fill forms
+
+The browser stays signed in. The tool does not copy your profile. It installs no extensions. It exports no passwords.
+
+The tool is [brave-session-mcp](https://github.com/MacStenk/brave-mcp) by MacStenk. It is an unofficial community project under an MIT license. It is not a Brave Software product and not a Proton product. I verified this setup on macOS in November 2026.
 
 ## What You Need
 
-- Lumo Desktop, signed in (connectors only run in the desktop app, not the web app)
-- Node.js 22 or newer (`node -v` to check)
-- Brave Nightly, the server's tested target ([download](https://brave.com/download-nightly))
+- Lumo Desktop, signed in. Connectors run in the desktop app only. They do not run in the web app.
+- Node.js 22 or newer. Check your version: `node -v`
+- Brave Nightly. Download it [here](https://brave.com/download-nightly). The server is tested against Nightly. Regular Brave is untested.
 
-Regular Brave may work but is untested. See the brave-session-mcp README for the `BRAVE_APP` and `BRAVE_USER_DATA_DIR` settings if you want to try it.
+## Procedure
 
-## The Steps
+### Step 1. Enable Remote Debugging
 
-### 1. Enable remote debugging in Brave, once
+1. Open Brave Nightly.
+2. Type `brave://inspect/#remote-debugging` in the address bar.
+3. Enable the permission.
 
-Open `brave://inspect/#remote-debugging` in Brave Nightly and enable the permission. The first time Lumo connects, Brave shows a confirmation dialog. Approve it. After a Brave restart you re-approve once and the connection comes back on its own.
+When Lumo connects the first time, Brave shows a confirmation dialog. Click Approve. After each browser restart, Brave asks again. Click Approve once more. The connection then restores itself.
 
-### 2. Install the server
+### Step 2. Install the Server
+
+1. Install the package:
 
 ```bash
 npm install -g brave-session-mcp
 ```
 
-Then find where it landed:
+2. Find the install path:
 
 ```bash
 which brave-session-mcp
 ```
 
-Copy the path it prints. On my Mac it was `/opt/homebrew/bin/brave-session-mcp`. Yours may differ; that's fine.
+3. Copy the path it prints. On my Mac the path was `/opt/homebrew/bin/brave-session-mcp`. Your path can differ.
 
-Run the path once in your terminal. It should start and sit silently waiting. That's correct, it has no window. Press Ctrl+C to quit.
+4. Run the path in your terminal. The server starts and waits. It shows no window. This is correct behavior.
 
-### 3. Add the connector in Lumo Desktop
+5. Press Ctrl+C to stop it.
 
-Open Customize, then Connectors, then Add MCP server. Fill in:
+### Step 3. Add the Connector
+
+1. Open Lumo Desktop.
+2. Click Customize, then Connectors.
+3. Click Add MCP server.
+4. Enter these values:
 
 | Field | Value |
 | --- | --- |
 | ID | `brave-session` |
 | Display Name | `Brave Session` |
-| Description | Drives the local Brave browser |
-| Command | The absolute path from step 2 |
-| Arguments | Leave empty |
-| Environment | Leave empty |
-| Secret Environment | Leave empty |
+| Description | `Controls the local Brave browser` |
+| Command | The path from step 2 |
+| Arguments | Empty |
+| Environment | Empty |
+| Secret Environment | Empty |
 
-Click **Save**, then **Connect**.
+5. Click Save.
+6. Click Connect.
 
-No API keys or passwords go anywhere. The server attaches to the browser you're already signed into, so there's nothing to put in the secret fields.
+Caution: If you close the window instead of clicking Save, Lumo discards the entry. Ask me how I know.
 
-### 4. Test it
+No API key is needed. The server attaches to the browser you already use. There is nothing to enter in the secret fields.
 
-Ask your assistant to open a page, something like "open proton.me in Brave." If a new tab appears, you're done.
+### Step 4. Test the Setup
 
-## Things That Cost Me Time, So They Don't Cost You Any
+1. Open a chat with your assistant.
+2. Say: "Open proton.me in Brave."
+3. If a new tab opens, the setup works.
 
-**Don't use npx as the command.** My first attempt used `npx -y brave-session-mcp`. The first run downloads the package, which blew past Lumo's 30-second connect timeout ("could not reach the MCP server... no response within 30s"). The global install plus the absolute path avoids the download entirely.
+## Problems and Corrections
 
-**Save, don't close.** Lumo's connector dialog discards the whole entry if you close the window instead of clicking Save. Ask me how I know.
-
-**The browser restart gotcha.** Brave asks you to re-approve remote debugging after each restart. One click, then it reconnects on the next use.
-
-**Environment fields want `KEY=VALUE` lines.** If you ever add an environment variable (you probably won't need one), it goes in as `BRAVE_MCP_PROFILE=Agent`, one per line. Name and value boxes or colon syntax get rejected with "Environment lines must be in KEY=VALUE form."
+| Symptom | Cause | Correction |
+| --- | --- | --- |
+| Could not reach the MCP server. No response within 30s. | First run of npx downloads the package and exceeds the connect timeout. | Use the global install. Put the absolute path in the Command field. Leave Arguments empty. |
+| The connector is not in the list after you close the dialog. | Lumo discarded the entry. | Enter the values again. Click Save. |
+| Message: Environment lines must be in KEY=VALUE form. | Wrong environment format. | Leave Environment empty. If you need a variable, enter it as `NAME=value`, one per line. |
+| The connector connects, but the browser count is zero. | Brave is closed, or debugging is off. | Start Brave Nightly. Check the setting in step 1. Approve the dialog. |
+| After a browser restart, nothing happens. | The approval lapsed. | Approve the dialog in Brave once. |
 
 ## Before You Let It Near Anything Important
 
-The agent operates your signed-in browser. It sees everything you see, including every site you're logged into. Two controls before you point it at work sites or anything with money in it:
+Caution: The assistant operates your signed-in browser. It can reach every site where you are logged in. Set limits before you point it at work sites or accounts with money in them.
 
-**Per-tool permissions in Lumo.** In Settings, Connectors, Brave Session, Functions, you can set each tool (open, click, fill, upload) to auto-approve, ask first, or never run. Ask-first is a reasonable default until you trust it.
+**Set tool permissions in Lumo.** Go to Settings, Connectors, Brave Session, Functions. Set each tool to auto-approve, ask first, or never run. Ask-first is a good setting until you trust the setup.
 
-**Domain blocking in brave-session-mcp.** The server reads `~/.config/brave-mcp/settings.json` on every action. You can set a `blocked` list of domains the agent can never touch, plus an agent `mode`. A malformed settings file fails closed: every tool errors rather than quietly allowing everything. Good design.
+**Block domains in the server.** The server reads `~/.config/brave-mcp/settings.json` before every action. Set a `blocked` list of domains the assistant must never open. Set an agent `mode` there too. If the settings file is broken, every tool fails. The server does not fall back to allowing everything. Good design.
 
-## If It Breaks Later
+## If It Stops Working
 
-Work down this list:
+Do these checks in order:
 
-1. `node -v` confirms Node is still installed and 22 or newer.
-2. `which brave-session-mcp` confirms the binary still exists. Running it directly should still start and wait silently.
-3. Brave Nightly is running and remote debugging is enabled. If it restarted, re-approve the dialog.
-4. The connector still shows as connected in Lumo, Customize, Connectors.
-5. The Command field still holds the absolute path, not npx.
-6. Ask the assistant to list your open Brave tabs. That exercises the whole chain and tells you where it failed.
+1. Run `node -v`. Confirm Node is installed and version 22 or newer.
+2. Run `which brave-session-mcp`. Confirm the path exists. Run it. Confirm it starts and waits.
+3. Confirm Brave Nightly is open and debugging is enabled. Approve the dialog if needed.
+4. Open Customize, Connectors. Confirm the connector is connected.
+5. Confirm the Command field holds the absolute path, not npx.
+6. Ask the assistant to list your open Brave tabs. This test exercises the full chain. The failure point tells you the cause.
 
-## Credits and Caveats
+## Credits
 
-- The tool is [brave-session-mcp](https://github.com/MacStenk/brave-mcp) / [MacStenk/brave-mcp](https://github.com/MacStenk/brave-mcp), MIT license. It's a community project, not a Brave Software product and not a Proton product.
-- I'm a Lumo user, not affiliated with Proton or Brave.
-- If Proton ships native Brave support, you can delete all of this. I'll be happy about it.
+- Tool: [brave-session-mcp](https://github.com/MacStenk/brave-mcp) / [MacStenk/brave-mcp](https://github.com/MacStenk/brave-mcp). MIT license.
+- I am a Lumo user. I have no affiliation with Proton or Brave.
+- If Proton ships native Brave support, you can delete all of this. I will be happy about it.
 
-Questions or corrections, open an issue.
+Questions or corrections: open an issue.
