@@ -66,10 +66,9 @@ which brave-session-mcp
 | Environment | Empty |
 | Secret Environment | Empty |
 
-5. Click Save.
-6. Click Connect.
-
-Caution: If you close the window instead of clicking Save, Lumo discards the entry. Ask me how I know.
+5. Click Connect.
+6. Click Close.
+7. Click Save.
 
 No API key is needed. The server attaches to the browser you already use. There is nothing to enter in the secret fields.
 
